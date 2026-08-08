@@ -19,3 +19,7 @@ dependencies = [
     "webdriver-manager",
     "ruff>=0.15.20",
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
