@@ -1,0 +1,21 @@
+[project]
+name = "algot"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "selenium",
+    "pyotp",
+    "boto3",
+    "pandas",
+    "openpyxl",
+    "pytz",
+    "schedule",
+    "requests",
+    "apscheduler",
+    "pyarrow",
+    "lxml",
+    "webdriver-manager",
+    "ruff>=0.15.20",
+]
