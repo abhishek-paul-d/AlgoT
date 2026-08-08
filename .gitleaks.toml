@@ -1,0 +1,29 @@
+title = "RNIT secret scanning rules"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "rnit-internal-api-key"
+description = "RNIT internal API key"
+regex = '''(?i)rnit[_-]?(api|secret)[_-]?key['"]?\s*[:=]\s*['"][0-9a-zA-Z]{16,}['"]'''
+tags = ["key", "rnit"]
+
+[[rules]]
+id = "hardcoded-db-url"
+description = "Database URL with inline credentials"
+regex = '''(postgres|postgresql|mysql|mongodb)(\+srv)?:\/\/[^:\s]+:[^@\s]+@'''
+tags = ["database", "credentials"]
+
+[allowlist]
+description = "Places where a secret-shaped string is legitimate"
+paths = [
+  '''\.env\.example$''',
+  '''(.*?)(test|spec)/fixtures/.*''',
+  '''(.*?)\.md$''',
+]
+regexes = [
+  '''EXAMPLE_KEY_DO_NOT_USE''',
+  '''YOUR_API_KEY_HERE''',
+  '''xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx''',
+]
