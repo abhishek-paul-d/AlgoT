@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+"""RNIT commit-msg hook - validates the commit subject line.
+
+Fast local feedback only; bypassable with --no-verify. The real gate is
+.github/workflows/commit-lint.yml (a required status check on the PR title).
+"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import rnit_naming  # noqa: E402
+
+
+def main():
+    msg_path = Path(sys.argv[1])
+    text = msg_path.read_text(encoding="utf-8")
+    subject = text.splitlines()[0] if text else ""
+
+    rules = rnit_naming.load_rules()
+    if rules is None:
+        return 0
+
+    error = rnit_naming.check_subject(subject, rules)
+    if error:
+        print(f"RNIT commit-msg: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

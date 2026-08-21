@@ -1,0 +1,26 @@
+# .github/workflows/branch-naming.yml
+# RNIT toolkit addition (not in the original ruleset doc). Makes the branch
+# naming rule a REQUIRED status check, so it can't be skipped the way a local
+# git hook can (--no-verify, a clone that never ran .githooks/install.py).
+#
+# Runs the exact same .githooks/rnit_naming.py that the local pre-push hook
+# imports, against the same .github/naming-rules.json - so the local hook and
+# this check can never silently disagree.
+name: Branch Naming
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+  push:
+    branches-ignore: [main, master, develop]
+
+jobs:
+  check-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate branch name
+        run: |
+          BRANCH="${{ github.head_ref || github.ref_name }}"
+          python3 .githooks/rnit_naming.py check-branch "$BRANCH"

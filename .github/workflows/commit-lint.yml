@@ -1,0 +1,26 @@
+# .github/workflows/commit-lint.yml
+# RNIT toolkit addition (not in the original ruleset doc). Checks the PR
+# title, because RNIT squash-merges by default and the PR title becomes the
+# final commit subject on develop/main - so this is what actually needs to
+# follow <type>(scope): subject, not the individual in-progress commits.
+#
+# Runs the exact same .githooks/rnit_naming.py that the local commit-msg hook
+# imports, against the same .github/naming-rules.json - so the local hook and
+# this check can never silently disagree.
+name: Commit Lint
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          python3 .githooks/rnit_naming.py check-subject "$PR_TITLE"

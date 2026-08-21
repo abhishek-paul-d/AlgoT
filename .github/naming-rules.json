@@ -1,0 +1,34 @@
+{
+  "$comment": "Single source of truth for RNIT naming conventions. Read by .githooks/rnit_naming.py, which is imported by .githooks/commit-msg and .githooks/pre-push for local feedback, and run directly as a CLI by .github/workflows/branch-naming.yml and commit-lint.yml as the real (required-status-check) gate. Also read by rnit-cli (a separate project) via `rnit_naming.py is-protected <branch>`, to decide whether a branch is a protected/base branch (no direct commits, rnit finish won't delete it) rather than hardcoding that list a second time there. Change it here, not in the scripts. branch.patterns is an ORDERED LIST tried in turn - a branch name is valid if it matches ANY one of them; this replaced the old branch.normal/branch.release two-regex shape once the approved-formats policy grew too many categories (exact names, per-base wildcards, multi-project prefixes) for two regexes to express cleanly. This is the org-wide 'approved branch name formats' policy (rollout announced separately) - the real, authoritative gate is a GitHub Ruleset configured server-side (see docs/BRANCH_PROTECTION_CHECKLIST.md, since that can't be committed as a file); these patterns exist to give the same answer locally and in CI, before a rejected push is the first anyone hears about it. The four per-base wildcard patterns (master/production/develop/staging) require a literal '-' before any suffix, not a bare '.*' - found by testing: an unconstrained '.*' let 'staging*' silently swallow 'staging_dist-anything' too, which isn't an approved format at all (staging_dist has no forward-wildcard in the policy, only its exact name and the reversed */staging_dist prefix). `protected: true` marks entries that are base/environment branches, not workable feature branches - main/master/production/develop/staging/prod_dist/staging_dist and their multi-project wildcard/prefix variants all carry it; type/<slug> and release/<...> entries don't (omitted, defaults to false).",
+  "types": ["feat", "fix", "hotfix", "refactor", "chore", "docs", "test", "release"],
+  "branch": {
+    "patterns": [
+      {"name": "main", "pattern": "^main$", "protected": true},
+      {"name": "master (+ multi-project suffix, e.g. master-project2)", "pattern": "^master(-[a-z0-9][a-z0-9-]*)?$", "protected": true},
+      {"name": "production (+ multi-project suffix, e.g. production-v2)", "pattern": "^production(-[a-z0-9][a-z0-9-]*)?$", "protected": true},
+      {"name": "production (multi-project prefix, e.g. project2/production)", "pattern": "^[a-z0-9][a-z0-9_-]*/production$", "protected": true},
+      {"name": "develop (+ multi-project suffix, e.g. develop-project2)", "pattern": "^develop(-[a-z0-9][a-z0-9-]*)?$", "protected": true},
+      {"name": "develop (multi-project prefix, e.g. project2/develop)", "pattern": "^[a-z0-9][a-z0-9_-]*/develop$", "protected": true},
+      {"name": "staging (+ multi-project suffix, e.g. staging-qa)", "pattern": "^staging(-[a-z0-9][a-z0-9-]*)?$", "protected": true},
+      {"name": "staging (multi-project prefix, e.g. project2/staging)", "pattern": "^[a-z0-9][a-z0-9_-]*/staging$", "protected": true},
+      {"name": "prod_dist", "pattern": "^prod_dist$", "protected": true},
+      {"name": "prod_dist (multi-project prefix, e.g. project2/prod_dist)", "pattern": "^[a-z0-9][a-z0-9_-]*/prod_dist$", "protected": true},
+      {"name": "staging_dist", "pattern": "^staging_dist$", "protected": true},
+      {"name": "staging_dist (multi-project prefix, e.g. project2/staging_dist)", "pattern": "^[a-z0-9][a-z0-9_-]*/staging_dist$", "protected": true},
+      {"name": "feat/<slug>", "pattern": "^feat/(\\d+-)?[a-z0-9]+(-[a-z0-9]+){0,4}$"},
+      {"name": "fix/<slug>", "pattern": "^fix/(\\d+-)?[a-z0-9]+(-[a-z0-9]+){0,4}$"},
+      {"name": "hotfix/<slug>", "pattern": "^hotfix/(\\d+-)?[a-z0-9]+(-[a-z0-9]+){0,4}$"},
+      {"name": "refactor/<slug>", "pattern": "^refactor/(\\d+-)?[a-z0-9]+(-[a-z0-9]+){0,4}$"},
+      {"name": "chore/<slug>", "pattern": "^chore/(\\d+-)?[a-z0-9]+(-[a-z0-9]+){0,4}$"},
+      {"name": "docs/<slug>", "pattern": "^docs/(\\d+-)?[a-z0-9]+(-[a-z0-9]+){0,4}$"},
+      {"name": "test/<slug>", "pattern": "^test/(\\d+-)?[a-z0-9]+(-[a-z0-9]+){0,4}$"},
+      {"name": "release/<version-or-tag>", "pattern": "^release/[a-z0-9]([a-z0-9.-]*[a-z0-9])?$"}
+    ],
+    "description": "Approved branch name formats: exact base names (main, master, production, develop, staging, prod_dist, staging_dist), per-base wildcard suffixes for multi-project repos (master-project2, staging-qa, ...), reversed multi-project prefixes (project2/production, ...), and type/<slug> for everything else - feat/fix/hotfix/refactor/chore/docs/test allow 1-5 lowercase hyphenated words (with an optional issue-number prefix) - e.g. chore/cleanup is valid, it doesn't have to be multi-word; release/<...> is looser again, since real examples include both semver (release/1.2.0) and date-based tags (release/2025-q3)."
+  },
+  "subject": {
+    "pattern": "^(feat|fix|hotfix|refactor|chore|docs|test|release)(\\([a-z0-9-]+\\))?: [a-z][^.]*[^. ]$",
+    "maxLength": 72,
+    "description": "type(scope)?: subject - scope optional, lowercase after colon, no trailing period, <=72 chars total. Imperative mood is NOT checked here (not machine-checkable per the RNIT doc)."
+  }
+}

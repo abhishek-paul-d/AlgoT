@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+"""RNIT pre-push hook - validates the name of every branch being pushed.
+
+Fast local feedback only; bypassable with --no-verify. The real gate is
+.github/workflows/branch-naming.yml (a required status check).
+"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import rnit_naming  # noqa: E402
+
+ZERO_SHA = "0" * 40
+
+
+def main():
+    rules = rnit_naming.load_rules()
+    if rules is None:
+        return 0
+
+    had_error = False
+    # git feeds "local_ref local_sha remote_ref remote_sha" lines on stdin,
+    # one per ref being pushed.
+    for line in sys.stdin:
+        parts = line.split()
+        if len(parts) != 4:
+            continue
+        local_ref, local_sha, _remote_ref, _remote_sha = parts
+
+        if not local_ref.startswith("refs/heads/"):
+            continue  # not a branch (e.g. a tag push) - nothing to validate
+        if local_sha == ZERO_SHA:
+            continue  # branch deletion - nothing to validate
+
+        branch = local_ref[len("refs/heads/"):]
+        error = rnit_naming.check_branch(branch, rules)
+        if error:
+            print(f"RNIT pre-push: {error}", file=sys.stderr)
+            had_error = True
+
+    return 1 if had_error else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
